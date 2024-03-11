@@ -1,7 +1,8 @@
 package fr.ecole3il.rodez2023.visualisateur;
 
 
-import fr.ecole3il.rodez2023.jeu.JeuDuPendueUI;
+import fr.ecole3il.rodez2023.jeu.AffichagePendu;
+import fr.ecole3il.rodez2023.jeu.JeuDuPenduUI;
 import fr.ecole3il.rodez2023.mots.GestionnaireJeu;
 import fr.ecole3il.rodez2023.mots.LecteurMots;
 
@@ -9,7 +10,8 @@ import java.util.*;
 import javax.swing.*;
 
 public class ApplicationJeuDuPendu {
-	public static void main(String[] args) {
+
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -17,7 +19,8 @@ public class ApplicationJeuDuPendu {
                 LecteurMots lecteurMots = new LecteurMots(nomFichier);
                 List<String> motsList = lecteurMots.getMotsList();
                 GestionnaireJeu gestionnaireJeu = new GestionnaireJeu(motsList);
-                JeuDuPendueUI jeuDuPenduUI = new JeuDuPendueUI(gestionnaireJeu);
+                AffichagePendu affichagePendu = new AffichagePendu();
+                JeuDuPenduUI jeuDuPenduUI = new JeuDuPenduUI(gestionnaireJeu, affichagePendu);
                 jeuDuPenduUI.setVisible(true);
             }
         });
