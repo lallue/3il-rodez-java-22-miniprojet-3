@@ -6,25 +6,32 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-public class JeuDuPendueUI extends JFrame {
+import javax.swing.*;
+import java.awt.*;
+
+public class JeuDuPenduUI extends JFrame {
 
     private JLabel motLabel;
     private JButton nouvellePartieButton;
     private GestionnaireJeu gestionnaireJeu;
+    private AffichagePendu affichagePendu;
 
-    public JeuDuPendueUI(GestionnaireJeu gestionnaireJeu) {
+    public JeuDuPenduUI(GestionnaireJeu gestionnaireJeu, AffichagePendu affichagePendu) {
         this.gestionnaireJeu = gestionnaireJeu;
+        this.affichagePendu = affichagePendu;
         initUI();
     }
 
     private void initUI() {
-        motLabel = new JLabel("<html> Mot à deviner <br> Appuyer sur Nouvelle Partie pour commencer<html>");
+        motLabel = new JLabel("Mot à deviner");
         motLabel.setFont(new Font("Arial", Font.PLAIN, 20));
         motLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         nouvellePartieButton = new JButton("Nouvelle Partie");
         nouvellePartieButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                affichagePendu.repaint();
                 String motADeviner = gestionnaireJeu.obtenirMotAleatoire();
                 motLabel.setText(motADeviner);
             }
@@ -34,10 +41,13 @@ public class JeuDuPendueUI extends JFrame {
         container.setLayout(new BorderLayout());
         container.add(motLabel, BorderLayout.CENTER);
         container.add(nouvellePartieButton, BorderLayout.SOUTH);
+        container.add(affichagePendu, BorderLayout.NORTH);
+
         setTitle("Jeu du Pendu");
-        setSize(400, 200);
+        setSize(400, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
     }
 }
+
