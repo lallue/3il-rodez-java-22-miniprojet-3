@@ -83,5 +83,16 @@ public class GestionnaireJeu {
     public void incrementerErreurs() {
         erreurs++;
     }
+
+	public List<Character> getLettresProposees() {
+    List<Character> lettresProposees = new ArrayList<>();
+    lettresProposees.addAll(lettresCorrectes);
+    lettresProposees.addAll(lettresIncorrectes);
+    return lettresProposees;
+    }
+
+	public boolean estLettreDejaProposee(char lettre) {
+    return lettresCorrectes.contains(lettre) || lettresIncorrectes.contains(lettre);
+    }
 }
 
