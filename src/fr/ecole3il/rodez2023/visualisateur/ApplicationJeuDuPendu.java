@@ -7,24 +7,23 @@ import fr.ecole3il.rodez2023.mots.GestionnaireJeu;
 import fr.ecole3il.rodez2023.mots.GestionnaireLettre;
 import fr.ecole3il.rodez2023.mots.LecteurMots;
 
-import java.util.*;
 import javax.swing.*;
+import java.util.List;
 
 public class ApplicationJeuDuPendu {
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                String nomFichier = "mots.txt";
-                LecteurMots lecteurMots = new LecteurMots(nomFichier);
-                List<String> motsList = lecteurMots.getMotsList();
-                GestionnaireJeu gestionnaireJeu = new GestionnaireJeu(motsList);
-                AffichagePendu affichagePendu = new AffichagePendu();
-                GestionnaireLettre gestionnaireLettre = new GestionnaireLettre(gestionnaireJeu);
-                JeuDuPenduUI jeuDuPenduUI = new JeuDuPenduUI(gestionnaireJeu, affichagePendu, gestionnaireLettre);
-                jeuDuPenduUI.setVisible(true);
-            }
+	public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            String nomFichier = "mots.txt";
+            LecteurMots lecteurMots = new LecteurMots(nomFichier);
+            List<String> motsList = lecteurMots.getMotsList();
+
+            GestionnaireJeu gestionnaireJeu = new GestionnaireJeu(motsList);
+            AffichagePendu affichagePendu = new AffichagePendu();
+            GestionnaireLettre gestionnaireLettre = new GestionnaireLettre(gestionnaireJeu);
+
+            JeuDuPenduUI jeuDuPenduUI = new JeuDuPenduUI(gestionnaireJeu, affichagePendu, gestionnaireLettre);
+            jeuDuPenduUI.setVisible(true);
         });
     }
 }
