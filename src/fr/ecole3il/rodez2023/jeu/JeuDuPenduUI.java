@@ -2,20 +2,26 @@ package fr.ecole3il.rodez2023.jeu;
 
 import fr.ecole3il.rodez2023.mots.GestionnaireJeu;
 import fr.ecole3il.rodez2023.mots.GestionnaireLettre;
-import fr.ecole3il.rodez2023.mots.LecteurMots;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
+
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class JeuDuPenduUI extends JFrame {
 
     private JLabel motLabel;
+    private JLabel lettresProposeesLabel;
+    private JButton envoyerLettreButton;
     private JButton nouvellePartieButton;
+    private JTextField lettreTextField;
     private GestionnaireJeu gestionnaireJeu;
     private AffichagePendu affichagePendu;
     private GestionnaireLettre gestionnaireLettre;
+
+    private boolean partieEnCours = false;
+    private int vies = 8;
 
     public JeuDuPenduUI(GestionnaireJeu gestionnaireJeu, AffichagePendu affichagePendu, GestionnaireLettre gestionnaireLettre) {
         this.gestionnaireJeu = gestionnaireJeu;
@@ -25,75 +31,140 @@ public class JeuDuPenduUI extends JFrame {
     }
 
     private void initUI() {
-        motLabel = new JLabel("Mot à deviner");
+        Container container = getContentPane();
+        container.setLayout(new BorderLayout());
+
+        motLabel = new JLabel("Bienvenue dans le Jeu du Pendu !");
         motLabel.setFont(new Font("Arial", Font.PLAIN, 20));
         motLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        container.add(motLabel, BorderLayout.CENTER);
 
-        nouvellePartieButton = new JButton("Nouvelle Partie");
-        nouvellePartieButton.addActionListener(new ActionListener() {
+        envoyerLettreButton = new JButton("Envoyer");
+        envoyerLettreButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                affichagePendu.repaint();
-                gestionnaireJeu.reinitialiserJeu();
-                mettreAJourMotLabel();
+                envoyerLettre();
             }
         });
 
-        JTextField lettreTextField = new JTextField();
-        lettreTextField.addKeyListener(new KeyListener() {
+        nouvellePartieButton = new JButton("Commencer");
+        nouvellePartieButton.addActionListener(new ActionListener() {
             @Override
-            public void keyTyped(KeyEvent e) {
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyChar() >= 'A' && e.getKeyChar() <= 'Z') {
-                    gestionnaireLettre.traiterLettre(e.getKeyChar());
-                    lettreTextField.setText("");
-                    mettreAJourMotLabel();
+            public void actionPerformed(ActionEvent e) {
+                if (!partieEnCours) {
+                    commencerPartie();
+                } else {
+                    nouvellePartie();
                 }
             }
         });
 
-        Container container = getContentPane();
-        container.setLayout(new BorderLayout());
-        container.add(motLabel, BorderLayout.CENTER);
-        container.add(nouvellePartieButton, BorderLayout.SOUTH);
+        JPanel boutonsPanel = new JPanel();
+        boutonsPanel.setLayout(new GridLayout(1, 2));
+        boutonsPanel.add(envoyerLettreButton);
+        boutonsPanel.add(nouvellePartieButton);
+
+        JPanel boutonsEtLettresPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        boutonsEtLettresPanel.add(boutonsPanel, gbc);
+
+        gbc.gridy = 1;
+        lettresProposeesLabel = new JLabel("Lettres déjà proposées : ");
+        boutonsEtLettresPanel.add(lettresProposeesLabel, gbc);
+
+        container.add(boutonsEtLettresPanel, BorderLayout.SOUTH);
+
+        affichagePendu.setPreferredSize(new Dimension(200, 300));
         container.add(affichagePendu, BorderLayout.NORTH);
-        container.add(lettreTextField, BorderLayout.EAST);
 
         setTitle("Jeu du Pendu");
-        setSize(400, 400);
+        setSize(400, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
-        mettreAJourMotLabel();
+    }
+
+
+    private void commencerPartie() {
+        partieEnCours = true;
+        motLabel.setText(gestionnaireJeu.getMotMasque());
+        nouvellePartieButton.setText("Nouvelle Partie");
+        envoyerLettreButton.setEnabled(true);
+
+        affichagePendu.reset(); 
+        vies = 8;
+
+        lettreTextField = new JTextField(1);
+        lettreTextField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                envoyerLettre();
+            }
+        });
+        getContentPane().add(lettreTextField, BorderLayout.EAST);
+    }
+
+    private void envoyerLettre() {
+        String lettre = lettreTextField.getText().toUpperCase();
+        if (lettre.length() == 1) {
+            if (!gestionnaireJeu.estLettreDejaProposee(lettre.charAt(0))) { 
+                if (vies > 0) {
+                    gestionnaireLettre.traiterLettre(lettre.charAt(0));
+                    mettreAJourMotLabel();
+                    mettreAJourLettresProposees();
+                    lettreTextField.setText("");
+                    if (!gestionnaireJeu.getMotMasque().contains(lettre)) {
+                        vies--;
+                        affichagePendu.incrementErreurs();
+                        if (vies == 0) {
+                            gameOver();
+                        }
+                    }
+                } else {
+                    gameOver();
+                }
+            } else {
+                JOptionPane.showMessageDialog(JeuDuPenduUI.this, "Cette lettre a déjà été proposée.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(JeuDuPenduUI.this, "Veuillez entrer une seule lettre.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void gameOver() {
+        partieEnCours = false;
+        envoyerLettreButton.setEnabled(false); 
+        JOptionPane.showMessageDialog(JeuDuPenduUI.this, "Désolé, vous avez perdu ! Le mot était : " + gestionnaireJeu.getMotADeviner(), "Game Over", JOptionPane.ERROR_MESSAGE);
+        nouvellePartie();
+    }
+
+    private void nouvellePartie() {
+        gestionnaireJeu.reinitialiserJeu();
+        partieEnCours = false;
+        motLabel.setText("Bienvenue dans le Jeu du Pendu !");
+        nouvellePartieButton.setText("Commencer");
+        getContentPane().remove(lettreTextField);
+        getContentPane().revalidate();
+        getContentPane().repaint();
     }
 
     private void mettreAJourMotLabel() {
         motLabel.setText(gestionnaireJeu.getMotMasque());
+
+        if (!gestionnaireJeu.getMotMasque().contains("_")) {
+            JOptionPane.showMessageDialog(JeuDuPenduUI.this, "Bravo, vous avez trouvé le mot !", "Félicitations", JOptionPane.INFORMATION_MESSAGE);
+            nouvellePartie();
+        }
+    }
+    
+    private void mettreAJourLettresProposees() {
+        StringBuilder lettresProposees = new StringBuilder();
+        for (char lettre : gestionnaireJeu.getLettresProposees()) {
+            lettresProposees.append(lettre).append(" ");
+        }
+        lettresProposeesLabel.setText("Lettres déjà proposées : " + lettresProposees.toString());
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                String nomFichier = "mots.txt";
-                LecteurMots lecteurMots = new LecteurMots(nomFichier);
-                List<String> motsList = lecteurMots.getMotsList();
-
-                GestionnaireJeu gestionnaireJeu = new GestionnaireJeu(motsList);
-                AffichagePendu affichagePendu = new AffichagePendu();
-                GestionnaireLettre gestionnaireLettre = new GestionnaireLettre(gestionnaireJeu);
-
-                JeuDuPenduUI jeuDuPenduUI = new JeuDuPenduUI(gestionnaireJeu, affichagePendu, gestionnaireLettre);
-                jeuDuPenduUI.setVisible(true);
-            }
-        });
-    }
 }
-
