@@ -2,6 +2,7 @@ package fr.ecole3il.rodez2023.jeu;
 
 import fr.ecole3il.rodez2023.mots.GestionnaireJeu;
 import fr.ecole3il.rodez2023.mots.GestionnaireLettre;
+import fr.ecole3il.rodez2023.jeu.GestionJeuPendu ;
 
 
 import javax.swing.*;
@@ -9,25 +10,31 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+
 public class JeuDuPenduUI extends JFrame {
 
     private JLabel motLabel;
     private JLabel lettresProposeesLabel;
-    private JButton envoyerLettreButton;
+    private JLabel timerLabel; // Nouveau JLabel pour afficher le timer
+    public JButton envoyerLettreButton;
     private JButton nouvellePartieButton;
     private JTextField lettreTextField;
     private GestionnaireJeu gestionnaireJeu;
     private AffichagePendu affichagePendu;
     private GestionnaireLettre gestionnaireLettre;
-
-    private boolean partieEnCours = false;
+    private GestionJeuPendu gestionJeuPendu;
+    
+    public boolean partieEnCours = false;
     private int vies = 8;
+    private Timer timer;
+    private int tempsRestant = 60; // Temps initial en secondes
 
     public JeuDuPenduUI(GestionnaireJeu gestionnaireJeu, AffichagePendu affichagePendu, GestionnaireLettre gestionnaireLettre) {
         this.gestionnaireJeu = gestionnaireJeu;
         this.affichagePendu = affichagePendu;
         this.gestionnaireLettre = gestionnaireLettre;
         initUI();
+        gestionJeuPendu = new GestionJeuPendu(this);
     }
 
     private void initUI() {
@@ -73,6 +80,11 @@ public class JeuDuPenduUI extends JFrame {
         gbc.gridy = 1;
         lettresProposeesLabel = new JLabel("Lettres déjà proposées : ");
         boutonsEtLettresPanel.add(lettresProposeesLabel, gbc);
+        
+        // Ajout du JLabel pour afficher le timer
+        gbc.gridy = 2;
+        timerLabel = new JLabel("Temps restant: " + tempsRestant + " secondes");
+        boutonsEtLettresPanel.add(timerLabel, gbc);
 
         container.add(boutonsEtLettresPanel, BorderLayout.SOUTH);
 
@@ -86,14 +98,13 @@ public class JeuDuPenduUI extends JFrame {
         setVisible(true);
     }
 
-
     private void commencerPartie() {
         partieEnCours = true;
         motLabel.setText(gestionnaireJeu.getMotMasque());
         nouvellePartieButton.setText("Nouvelle Partie");
         envoyerLettreButton.setEnabled(true);
 
-        affichagePendu.reset(); 
+        affichagePendu.reset();
         vies = 8;
 
         lettreTextField = new JTextField(1);
@@ -104,12 +115,15 @@ public class JeuDuPenduUI extends JFrame {
             }
         });
         getContentPane().add(lettreTextField, BorderLayout.EAST);
+
+        gestionJeuPendu.demarrerTimer();
+        demarrerTimer();
     }
 
     private void envoyerLettre() {
         String lettre = lettreTextField.getText().toUpperCase();
         if (lettre.length() == 1) {
-            if (!gestionnaireJeu.estLettreDejaProposee(lettre.charAt(0))) { 
+            if (!gestionnaireJeu.estLettreDejaProposee(lettre.charAt(0))) {
                 if (vies > 0) {
                     gestionnaireLettre.traiterLettre(lettre.charAt(0));
                     mettreAJourMotLabel();
@@ -133,14 +147,15 @@ public class JeuDuPenduUI extends JFrame {
         }
     }
 
-    private void gameOver() {
+    public void gameOver() {
         partieEnCours = false;
-        envoyerLettreButton.setEnabled(false); 
+        envoyerLettreButton.setEnabled(false);
         JOptionPane.showMessageDialog(JeuDuPenduUI.this, "Désolé, vous avez perdu ! Le mot était : " + gestionnaireJeu.getMotADeviner(), "Game Over", JOptionPane.ERROR_MESSAGE);
         nouvellePartie();
     }
 
     private void nouvellePartie() {
+        gestionJeuPendu.arreterTimer();
         gestionnaireJeu.reinitialiserJeu();
         partieEnCours = false;
         motLabel.setText("Bienvenue dans le Jeu du Pendu !");
@@ -158,7 +173,7 @@ public class JeuDuPenduUI extends JFrame {
             nouvellePartie();
         }
     }
-    
+
     private void mettreAJourLettresProposees() {
         StringBuilder lettresProposees = new StringBuilder();
         for (char lettre : gestionnaireJeu.getLettresProposees()) {
@@ -167,4 +182,19 @@ public class JeuDuPenduUI extends JFrame {
         lettresProposeesLabel.setText("Lettres déjà proposées : " + lettresProposees.toString());
     }
 
+    // Méthode pour démarrer le timer
+    public void demarrerTimer() {
+        timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tempsRestant--;
+                if (tempsRestant >= 0) {
+                    timerLabel.setText("Temps restant: " + tempsRestant + " secondes");
+                } else {
+                    gameOver();
+                }
+            }
+        });
+        timer.start();
+    }
 }
