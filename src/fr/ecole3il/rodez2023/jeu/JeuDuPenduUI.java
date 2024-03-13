@@ -2,12 +2,9 @@ package fr.ecole3il.rodez2023.jeu;
 
 import fr.ecole3il.rodez2023.mots.GestionnaireJeu;
 import fr.ecole3il.rodez2023.mots.GestionnaireLettre;
-import fr.ecole3il.rodez2023.jeu.GestionJeuPendu;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * La classe JeuDuPenduUI représente l'interface utilisateur du jeu du pendu.
@@ -64,8 +61,9 @@ public class JeuDuPenduUI extends JFrame {
 
         nouvellePartieButton = new JButton("Commencer");
         nouvellePartieButton.addActionListener(e -> {
-            if (!partieEnCours) {
+        	if (!partieEnCours) {
                 commencerPartie();
+                demarrerTimer(); // Démarre le timer uniquement lorsque "Commencer" est cliqué
             } else {
                 nouvellePartie();
             }
@@ -117,9 +115,6 @@ public class JeuDuPenduUI extends JFrame {
         lettreTextField = new JTextField(1);
         lettreTextField.addActionListener(e -> envoyerLettre());
         getContentPane().add(lettreTextField, BorderLayout.EAST);
-
-        gestionJeuPendu.demarrerTimer();
-        demarrerTimer();
     }
 
     /**
@@ -174,6 +169,7 @@ public class JeuDuPenduUI extends JFrame {
         getContentPane().remove(lettreTextField);
         getContentPane().revalidate();
         getContentPane().repaint();
+        tempsRestant = 60; // Réinitialise le temps restant à 60 secondes
     }
 
     /**
@@ -203,6 +199,10 @@ public class JeuDuPenduUI extends JFrame {
      * Démarre le timer pour le temps de jeu.
      */
     public void demarrerTimer() {
+        if (timer != null) { // Vérifie si un Timer existe déjà
+            timer.stop(); // Arrête l'ancien Timer s'il existe
+        }
+
         timer = new Timer(1000, e -> {
             tempsRestant--;
             if (tempsRestant >= 0) {
@@ -211,6 +211,6 @@ public class JeuDuPenduUI extends JFrame {
                 gameOver();
             }
         });
-        timer.start();
+        timer.start(); // Démarre le nouveau Timer
     }
 }
